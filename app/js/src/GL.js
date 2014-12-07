@@ -3,6 +3,8 @@ var GLTEST = GLTEST || function(){
 	var shaderProgram;
 	var pMatrix;
 	var mvMatrix; // modelViewMatrix;
+	var triRot=25;
+	var triangle;
 	mvMatrix = mat4.create();
 
 	container = {};
@@ -18,7 +20,12 @@ var GLTEST = GLTEST || function(){
 		gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
 
-    this.draw();
+    triangle = new Triangle(gl, this);
+    triangle2 = new Triangle(gl, this);
+    triangle3 = new Triangle(gl, this);
+    triangle4 = new Triangle(gl, this);
+
+    this.tick(this);
 
 
 	};
@@ -49,6 +56,7 @@ var GLTEST = GLTEST || function(){
 		this.triangleVertexPositionBuffer.itemSize = 3;
 		this.triangleVertexPositionBuffer.numItems = 3;
 
+		
 	};
 
 	container.initShaders = function() {
@@ -67,6 +75,7 @@ var GLTEST = GLTEST || function(){
 		shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, 'uPMatrix');
 		shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, 'uMVMatrix');
 
+		this.shaderProgram = shaderProgram;
 		pMatrix = mat4.create();
 	};
 
@@ -110,6 +119,23 @@ var GLTEST = GLTEST || function(){
     gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
 	};
 
+
+	var rSpeed = 0.05;
+	var prevTime = 0;
+	var fps = 0;
+	var elapsed = 0;
+	container.animate = function(){
+		var curTime = new Date().getTime();
+		if(prevTime!=0){
+			elapsed = curTime - prevTime;
+
+			triRot += rSpeed * elapsed;
+
+
+		}
+		prevTime = curTime;
+	};
+
 	container.draw = function() {
 
 		gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
@@ -117,15 +143,38 @@ var GLTEST = GLTEST || function(){
 
 		p = mat4.perspective(pMatrix, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
 		
-		mat4.identity(mvMatrix);
-		mat4.translate(mvMatrix, mvMatrix, vec3.fromValues(-1.5, 0.0, -7.0) );
-
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.triangleVertexPositionBuffer);
-		gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, this.triangleVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
 		this.setMatrixUniforms();
 
-		gl.drawArrays(gl.TRIANGLES, 0, this.triangleVertexPositionBuffer.numItems);
+
+		mat4.identity(mvMatrix);
+		mat4.translate(mvMatrix, mvMatrix, vec3.fromValues(1.5, 0.0, -7.0) );
+
+		triangle.resetMVMatrix();
+		triangle.translate(1.5, 0.0, -7.0);
+		triangle.rotateZ(Math.PI*triRot/180);
+		triangle.draw(gl, this);
+
+		triangle2.resetMVMatrix();
+		triangle2.translate(-1.5, 0.0, -7.0);
+		triangle2.rotateZ(Math.PI*triRot/180);
+		triangle2.draw(gl, this);
+
+		triangle3.resetMVMatrix();
+		triangle3.translate(1.5, 0.0, -6.0);
+		triangle3.rotateZ(-Math.PI*triRot/180);
+		triangle3.draw(gl, this);
+
+		triangle4.resetMVMatrix();
+		triangle4.translate(-1.5, 0.0, -6.0);
+		triangle4.rotateZ(-Math.PI*triRot/180);
+		triangle4.draw(gl, this);
+	};
+
+	container.tick = function() {
+		GLTEST.animate();
+		GLTEST.draw();
+
+		requestAnimationFrame(GLTEST.tick);
 	};
 
 	return container;

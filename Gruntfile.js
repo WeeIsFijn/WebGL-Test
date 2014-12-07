@@ -5,7 +5,7 @@ module.exports = function(grunt) {
     require('load-grunt-tasks')(grunt);
 
 	var dest = 'app/js/app.js'
-  var src = ['app/js/src/cube.js',
+  var src = ['app/js/src/Triangle.js',
   						'app/js/src/GL.js'];
 
 	grunt.initConfig({
