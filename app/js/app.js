@@ -63,6 +63,88 @@ Triangle.prototype.resetMVMatrix = function() {
 
 
 
+;var Circle = function(gl, renderer) {
+	this.gl = gl;
+	this.renderer = renderer;
+
+	this.mvMatrix = mat4.create();
+	mat4.identity(this.mvMatrix);
+
+	this.numberOfSamples = 96;
+	this.radius = 1;
+
+	this.initBuffers();
+
+};
+
+Circle.prototype.initBuffers = function(){
+		// create new vertex buffer
+		this.triangleVertexPositionBuffer = this.gl.createBuffer();
+
+		// activate the new vertex buffer for editing
+		this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.triangleVertexPositionBuffer);
+
+		// define vertices
+		var vertices = [];
+
+		for (var i = this.numberOfSamples - 1; i >= 0; i--) {
+			vertices.push( this.radius*Math.cos(i*2*Math.PI/this.numberOfSamples) );
+			vertices.push( this.radius*Math.sin(i*2*Math.PI/this.numberOfSamples) );
+			vertices.push( 0.0 );
+
+			vertices.push( this.radius*Math.cos((i+1)*2*Math.PI/this.numberOfSamples) );
+			vertices.push( this.radius*Math.sin((i+1)*2*Math.PI/this.numberOfSamples) );
+			vertices.push( 0.0 );
+
+			vertices.push( 0.0 );
+			vertices.push( 0.0 );
+			vertices.push( 0.0 );
+
+		};
+
+		this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
+
+		this.triangleVertexPositionBuffer.itemSize = 3;
+		this.triangleVertexPositionBuffer.numItems = 3*this.numberOfSamples;
+};
+
+Circle.prototype.draw = function(){
+	this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.triangleVertexPositionBuffer);
+	this.gl.vertexAttribPointer(this.renderer.shaderProgram.vertexPositionAttribute, this.triangleVertexPositionBuffer.itemSize, this.gl.FLOAT, false, 0, 0);
+
+	this.gl.uniformMatrix4fv(this.renderer.shaderProgram.mvMatrixUniform, false, this.mvMatrix);
+
+	this.gl.drawArrays(this.gl.TRIANGLES, 0, this.triangleVertexPositionBuffer.numItems);
+};
+
+Circle.prototype.deltaRotateZ = function(rad) {
+	mat4.rotateZ(this.mvMatrix, this.mvMatrix, rad);
+};
+
+Circle.prototype.deltaTranslate = function(x, y, z) {
+	mat4.translate(this.mvMatrix, this.mvMatrix, vec3.fromValues(x, y, z) );
+}
+
+Circle.prototype.translate = function(x,y,z) {
+	mat4.translate(this.mvMatrix, this.mvMatrix, vec3.fromValues(x, y, z));
+};
+
+Circle.prototype.rotateZ = function(rad){
+	mat4.rotateZ(this.mvMatrix, this.mvMatrix, rad);
+};
+
+Circle.prototype.resetMVMatrix = function() {
+	mat4.identity(this.mvMatrix);
+};
+
+Circle.prototype.setRadius = function(r) {
+	this.radius = r;
+	this.initBuffers();
+};
+
+
+
+
 ;var GLTEST = GLTEST || function(){
 	var gl;
 	var shaderProgram;
@@ -70,6 +152,7 @@ Triangle.prototype.resetMVMatrix = function() {
 	var mvMatrix; // modelViewMatrix;
 	var triRot=25;
 	var triangle;
+	var circle = [];
 	mvMatrix = mat4.create();
 
 	container = {};
@@ -85,10 +168,10 @@ Triangle.prototype.resetMVMatrix = function() {
 		gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
 
-    triangle = new Triangle(gl, this);
-    triangle2 = new Triangle(gl, this);
-    triangle3 = new Triangle(gl, this);
-    triangle4 = new Triangle(gl, this);
+    for (var i = 0; i < 20; i++) {
+    	circle.push( new Circle(gl, this) );
+    	circle[i].setRadius(0.1);
+    };
 
     this.tick(this);
 
@@ -206,33 +289,41 @@ Triangle.prototype.resetMVMatrix = function() {
 		gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-		p = mat4.perspective(pMatrix, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
 		
+		pMatrix = mat4.perspective(pMatrix, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
+		mat4.rotateZ(pMatrix, pMatrix, triRot/300);
 		this.setMatrixUniforms();
 
+		for( c in circle ){
+			circle[c].resetMVMatrix();
+			circle[c].translate(-6.0 + (12.0/circle.length*c), 0.0, -5.0 + 1.0*Math.cos(triRot/20+3.0*Math.PI/circle.length*c));
+			circle[c].draw();
+		}
 
-		mat4.identity(mvMatrix);
-		mat4.translate(mvMatrix, mvMatrix, vec3.fromValues(1.5, 0.0, -7.0) );
+		for( c in circle ){
+			circle[c].resetMVMatrix();
+			circle[c].translate(-6.0 + (12.0/circle.length*c), 1.0, -5.0 + 1.0*Math.cos(triRot/20+3.0*Math.PI/circle.length*c));
+			circle[c].draw();
+		}
 
-		triangle.resetMVMatrix();
-		triangle.translate(1.5, 0.0, -7.0);
-		triangle.rotateZ(Math.PI*triRot/180);
-		triangle.draw(gl, this);
+		for( c in circle ){
+			circle[c].resetMVMatrix();
+			circle[c].translate(-6.0 + (12.0/circle.length*c), -1.0, -5.0 + 1.0*Math.cos(triRot/20+3.0*Math.PI/circle.length*c));
+			circle[c].draw();
+		}
 
-		triangle2.resetMVMatrix();
-		triangle2.translate(-1.5, 0.0, -7.0);
-		triangle2.rotateZ(Math.PI*triRot/180);
-		triangle2.draw(gl, this);
+		for( c in circle ){
+			circle[c].resetMVMatrix();
+			circle[c].translate(-6.0 + (12.0/circle.length*c), -2.0, -5.0 + 1.0*Math.cos(triRot/20+3.0*Math.PI/circle.length*c));
+			circle[c].draw();
+		}
 
-		triangle3.resetMVMatrix();
-		triangle3.translate(1.5, 0.0, -6.0);
-		triangle3.rotateZ(-Math.PI*triRot/180);
-		triangle3.draw(gl, this);
+		for( c in circle ){
+			circle[c].resetMVMatrix();
+			circle[c].translate(-6.0 + (12.0/circle.length*c), 2.0, -5.0 + 1.0*Math.cos(triRot/20+3.0*Math.PI/circle.length*c));
+			circle[c].draw();
+		}
 
-		triangle4.resetMVMatrix();
-		triangle4.translate(-1.5, 0.0, -6.0);
-		triangle4.rotateZ(-Math.PI*triRot/180);
-		triangle4.draw(gl, this);
 	};
 
 	container.tick = function() {
