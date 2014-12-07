@@ -1,7 +1,4 @@
-var cube = function() {
-	this.position = vec3.create();
-	
-};var GLTEST = GLTEST || function(){
+var GLTEST = GLTEST || function(){
 	var gl;
 	var shaderProgram;
 	var pMatrix;

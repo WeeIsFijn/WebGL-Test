@@ -4,6 +4,9 @@ module.exports = function(grunt) {
 
     require('load-grunt-tasks')(grunt);
 
+	var dest = 'app/js/app.js'
+  var src = ['app/js/src/cube.js',
+  						'app/js/src/GL.js'];
 
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
@@ -24,7 +27,16 @@ module.exports = function(grunt) {
 			}
 		},
 
-		
+		  
+concat: {
+    options: {
+      separator: ';',
+    },
+    dist: {
+      src: src,
+      dest: dest,
+    },
+  },
 
 		jshint: {
 			options: {
