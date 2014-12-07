@@ -2,6 +2,7 @@
 
 A simple webgl application in javascript that renders a number of circles on the canvas. Circles will wave up and down, following a cosine function.
 
+![Screenshot of awesomeness](https://raw.githubusercontent.com/WeeIsFijn/WebGL-Test/Screenshot/screen.png?raw=true "Screenshot of Awesomeness!!")
 ### Getting it
 ```
 git clone 
